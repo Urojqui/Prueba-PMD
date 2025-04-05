@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario Estático con Tabla</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f5f5f5;
+        }
+        .contenedor {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            width: 350px;
+            margin: auto;
+            margin-top: 20px;
+        }
+        input, button {
+            margin: 10px;
+            padding: 8px;
+            width: 90%;
+            font-size: 16px;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #218838;
+        }
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+        }
+        th {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .genero{
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .edit-button{
+            background-color: yellow;
+            color: black;
+        }
+
+        .delete-button{
+            background-color: red;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <h2>Formulario para Agregar Personas</h2>
+
+    <div class="contenedor">
+
+            <input type="text" id="nombre" placeholder="Nombre">
+            <input type="number" id="edad" placeholder="Edad">
+            <input type="text" id="ocupacion" placeholder="Ocupación">
+            
+
+            <div class="genero">
+                <label><input type="radio" name="genero" value="hombre">Hombre</label>
+                <label><input type="radio" name="genero" value="mujer">Mujer</label>
+                <label><input type="radio" name="genero" value="otro">Otro</label>
+            </div>
+
+            <button id="agregar">Agregar Persona</button>
+            <button id="actualizar" style="display: none;">Actualizar Persona</button>
+    </div>
+
+    <h3>Lista de Personas</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Edad</th>
+                <th>Ocupación</th>
+                <th>Genero</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody id="tablaPersonas">
+            
+        </tbody>
+    </table>
+
+    <script>
+
+        let personas = JSON.parse(localStorage.getItem("personas")) || [];
+        let editIndex = -1; //Guardamos un índice general del elemento a editar
+
+        document.getElementById("agregar").addEventListener("click", function() {
+            let nombre = document.getElementById("nombre").value.trim();
+            let edad = document.getElementById("edad").value.trim();
+            let ocupacion = document.getElementById("ocupacion").value.trim();
+
+            let generoSeleccionado = document.querySelector('input[name="genero"]:checked');let genero = generoSeleccionado ? generoSeleccionado.value : "No identificado";
+
+
+            if (nombre === "" || edad === "" || ocupacion === "") {
+                alert("Por favor, completa todos los campos.");
+                return;
+            }
+            let persona = {
+                nombre : nombre,
+                edad : edad,
+                ocupacion : ocupacion,
+                genero : genero,
+            };
+
+        personas.push(persona);
+        limparFormulario();
+        actualizarTabla();
+    
+    });
+
+    function limparFormulario(){
+        let generoSeleccionado = document.querySelector('input[name="genero"]:checked');let genero = generoSeleccionado ? generoSeleccionado.value : "No identificado";
+        //limpiar el formulario
+        document.getElementById("nombre").value = "";
+        document.getElementById("edad").value = "";
+        document.getElementById("ocupacion").value = "";
+        if (generoSeleccionado) {
+            generoSeleccionado.checked = false;
+        } //Limpiamos el check con FALSE
+}
+
+    function actualizarTabla() {
+
+        let tabla =document.getElementById("tablaPersonas");
+        tabla.innerHTML = "";
+
+        for (let i = 0; i<personas.length; i++) {
+
+            let fila = `
+            <tr>
+                <td>${personas[i].nombre}</td>
+                <td>${personas[i].edad}</td>
+                <td>${personas[i].ocupacion}</td>
+                <td>${personas[i].genero}</td>
+                
+                <td>
+                    <button class="edit-button"  onclick="editarPersona(${i})">Modificar</button>
+                    <button class="delete-button" onclick="borrarPersona(${i})">Eliminar</button>
+                </td>
+            </tr>
+            `;
+            tabla.innerHTML += fila;
+        }
+
+    }
+
+    function borrarPersona(rodolfo){
+        personas.splice(rodolfo, 1);
+        actualizarTabla();
+    }
+
+    function editarPersona(index) {
+    let persona = personas[index];
+
+    document.querySelector("#nombre").value = persona.nombre;
+    document.querySelector("#edad").value = persona.edad;
+    document.querySelector("#ocupacion").value = persona.ocupacion;
+
+    let radios = document.querySelectorAll('input[name="genero"]');
+    radios.forEach(radio => {
+        if (radio.value === persona.genero) {
+            radio.checked = true;
+        }
+    });
+
+    document.querySelector("#agregar").style.display = "none";
+    document.querySelector("#actualizar").style.display = "block";
+
+    editIndex = index;
+}
+
+    document.querySelector("#actualizar").addEventListener("click", function(){
+
+        //Metemos en variables lo que hay en el formulario superior
+        let nombre = document.querySelector("#nombre").value.trim();
+        let edad = document.querySelector("#edad").value.trim();
+        let ocupacion = document.querySelector("#ocupacion").value.trim();
+        let generoSeleccionado = document.querySelector('input[name="genero"]:checked');
+        let genero = generoSeleccionado ?  generoSeleccionado.value : "No seleccionado";
+        //Un if else abreviado se hace con ? y el "else" se hace con :
+
+        if (nombre === "" || edad === "" || ocupacion === "") {
+                alert("Por favor, completa todos los campos.");
+                return;
+        }
+
+        let persona = {
+            nombre : nombre,
+            edad : edad,
+            ocupacion : ocupacion,
+            genero : genero,
+        };
+
+        personas[editIndex] = persona;
+        actualizarTabla(); //actualizamos para que se vea el cambio
+        //Limpiamos el formulario
+        limparFormulario();
+        //Cambiamos los botones
+        document.querySelector("#agregar").style.display = "block";
+        document.querySelector("#actualizar").style.display = "none";
+        editIndex = -1; //Reiniciamos el índice para que no haya problemas
+    });
+
+    //Función para guardar los datos en el localStorage
+    function guardarDatosEnLocalStorage() {
+        localStorage.setItem("personas", JSON.stringify(personas)); //Stringify convierte el objeto a string
+    }
+
+    </script>
+
+</body>
+</html>
